@@ -1,4 +1,4 @@
-#---
-#- src: geerlingguy.apache
-#- src: geerlingguy.munin
-#- src: geerlingguy.munin-node
+---
+- src: geerlingguy.apache
+- src: geerlingguy.munin
+- src: geerlingguy.munin-node
