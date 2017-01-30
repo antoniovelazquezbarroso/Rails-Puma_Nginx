@@ -12,3 +12,4 @@
 
   roles:
     - geerlingguy.munin-node
+    - Mooash.nagios-nrpe-server

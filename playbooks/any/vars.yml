@@ -24,3 +24,7 @@ munin_node_config: {
 # For fine-grained group-based plugin configuration of munin-node 
 # Override the former definitions in a .yml group_vars file
 # named after the relevant inventory group
+
+
+#Variables for nagios-nrpe-server
+nagios_nrpe_server_allowed_hosts: 192.168.2.75

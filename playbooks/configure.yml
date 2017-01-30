@@ -1,3 +1,4 @@
 ---
 - include: munin/main.yml
+- include: nagios/main.yml
 - include: any/main.yml
