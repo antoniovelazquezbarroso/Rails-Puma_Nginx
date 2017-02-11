@@ -10,5 +10,6 @@
 - src: geerlingguy.elasticsearch-curator
 - src: geerlingguy.kibana
 - src: geerlingguy.logstash
+- src: geerlingguy.mysql
 #- src: geerlingguy.firewall
 #- src: nickhammond.logrotate

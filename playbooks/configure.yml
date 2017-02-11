@@ -2,4 +2,5 @@
 - include: munin/main.yml
 - include: nagios/main.yml
 - include: elk/main.yml
+- include: db/main.yml
 - include: any/main.yml
