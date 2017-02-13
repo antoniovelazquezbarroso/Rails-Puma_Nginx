@@ -11,5 +11,9 @@
 - src: geerlingguy.kibana
 - src: geerlingguy.logstash
 - src: geerlingguy.mysql
+- src: geerlingguy.git
+- src: geerlingguy.nodejs
+- src: geerlingguy.ruby
+- src: geerlingguy.passenger
 #- src: geerlingguy.firewall
 #- src: nickhammond.logrotate
