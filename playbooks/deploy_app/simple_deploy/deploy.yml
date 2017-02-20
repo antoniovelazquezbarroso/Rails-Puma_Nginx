@@ -12,7 +12,9 @@
     - name: Ensure demo application is at correct release.
       git:
         repo: https://github.com/antoniovelazquezbarroso/myticketee_mysql.git
-        #version: "{{ app_version }}"
+        # version: "{{ app_version }}" # To choose version repository to checkout
+                                      # (can be a branch name, tag name or SHA-1 hash)
+                                      # defaults to the literal string HEAD 
         dest: "{{ app_directory }}"
         accept_hostkey: true
         force: yes
@@ -27,7 +29,11 @@
         group: "{{ app_user }}"
         mode: 0664
       notify: restart nginx
-
+      # Fails frequently on Ansible 2.2.0.0 because of git.py module error
+      # Just retrying fixes the problem
+      # See https://github.com/ansible/ansible-modules-core/issues/5504
+      # and https://github.com/ansible/ansible-modules-core/pull/5505
+      
     - name: Install required dependencies with bundler.
       shell: "bundle install --path vendor/bundle chdir={{ app_directory }}"
       when: app_updated.changed == true
