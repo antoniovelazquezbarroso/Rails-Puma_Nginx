@@ -1,6 +1,11 @@
 ---
 apache_remove_default_vhost: true
 
+munin_packages:
+  - python-passlib
+  - libcgi-fast-perl # Required for Munin dynazoom Zoom Graph 
+  - munin
+  
 munin_admin_user: muninadmin
 munin_admin_password: muninadmin
 
