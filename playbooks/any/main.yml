@@ -13,5 +13,6 @@
   roles:
     - geerlingguy.munin-node
     - Mooash.nagios-nrpe-server
+    - geerlingguy.filebeat
     #- geerlingguy.firewall
     #- nickhammond.logrotate

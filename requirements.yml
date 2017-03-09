@@ -10,6 +10,7 @@
 - src: geerlingguy.elasticsearch-curator
 - src: geerlingguy.kibana
 - src: geerlingguy.logstash
+- src: geerlingguy.filebeat
 - src: geerlingguy.mysql
 - src: geerlingguy.git
 - src: geerlingguy.nodejs
