@@ -44,5 +44,6 @@
       - files/10-syslog-filter.conf
       - files/11-nginx-filter.conf
       - files/12-apache-filter.conf
+#      - files/13-mysql-filter.conf doesnt work properly
       - files/30-elasticsearch-output.conf
       notify: restart logstash

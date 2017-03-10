@@ -50,6 +50,18 @@ filebeat_prospectors:
       - "var/log/nginx/*.log"
     input_type: log
     document_type: nginx
+  - paths:
+      - "var/log/mysql.err"
+    input_type: log
+    document_type: mysql_error
+  - paths:
+      - "var/log/mysql/mysql-slow.log"
+    input_type: log
+    document_type: mysql_slow
+  - paths:
+      - "var/log/mysql/mysql-general.log"
+    input_type: log
+    document_type: mysql_general
 
 
 # For fine-grained group-based configuration of filebeat configuration
