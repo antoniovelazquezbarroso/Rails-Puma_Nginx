@@ -5,9 +5,6 @@ mysql_databases:
     collation: utf8_general_ci
     encoding: utf8
 
-# MySql general log
-mysql_log: "/var/log/mysql/mysql-general.log"
-
-# Slow query log settings.
-mysql_slow_query_log_enabled: yes
-mysql_slow_query_time: "2"
+# Variables to config mysql replication and mysql logging
+# are defined in .yml files named after each host
+# in the hosts_vars folder placed alongside the inventory file
