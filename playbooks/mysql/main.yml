@@ -1,5 +1,5 @@
 ---
-- hosts: db
+- hosts: mysql
   become: yes
 
   vars_files:
@@ -10,10 +10,8 @@
       set_fact:
         mysql_users:
           - name: mycompany_user
-            host: "{{ groups['db'][0] }}"
+            host: "{{ groups['mysql'][0] }}"
             password: secret
             priv: "*.*:SELECT"
-        mysql_replication_master: "{{ groups['db'][0] }}"
-
   roles:
     - geerlingguy.mysql

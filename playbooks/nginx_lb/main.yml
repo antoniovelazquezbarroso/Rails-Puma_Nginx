@@ -1,0 +1,24 @@
+---
+- hosts: nginx
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  roles:
+    - geerlingguy.nginx
+
+  tasks:
+    - name: Remove nginx default site
+      file:
+        dest: /etc/nginx/sites-available/default
+        state: absent
+
+    - name: Ensure nginx config file is present.
+      template:
+        src: templates/demo-rails-app.conf.j2
+        dest: /etc/nginx/conf.d/demo-rails-app.conf
+        owner: "{{ nginx_user }}"
+        group: "{{ nginx_user }}"
+        mode: 0664
+      notify: restart nginx

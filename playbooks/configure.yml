@@ -1,7 +1,4 @@
 ---
-- include: munin/main.yml
-- include: nagios/main.yml
-- include: elk/main.yml
 - include: mysql/main.yml
-- include: any/main.yml
-- include: deploy_app/simple_deploy/main.yml
+- include: nginx_lb/main.yml
+- include: rails_app/main.yml
