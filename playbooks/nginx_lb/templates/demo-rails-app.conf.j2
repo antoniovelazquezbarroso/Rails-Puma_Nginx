@@ -1,5 +1,5 @@
 upstream demo-rails-app {
-  server unix:///var/run/demo-rails-app.sock;
+  server unix:///opt/demo-rails-app/tmp/sockets/puma.sock;
 }
 
 server {

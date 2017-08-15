@@ -11,8 +11,8 @@
   tasks:
     - name: Ensure demo application is at correct release.
       git:
-        repo: https://github.com/antoniovelazquezbarroso/myticketee_mysql.git
-        version: "{{ app_version }}" # To choose version repository to checkout
+        repo: https://github.com/antoniovelazquezbarroso/blog.git
+        # version: "{{ app_version }}" # To choose version repository to checkout
                                      # (can be a branch name, tag name or SHA-1 hash)
                                      # defaults to the literal string HEAD 
         dest: "{{ app_directory }}"
@@ -43,6 +43,17 @@
         mode: 0664
       notify: restart nginx
       
+    - name: Ensure puma pids and socket folders exist and are writeable.
+      file:
+        path: "{{ app_directory }}/tmp/{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: 0755
+      with_items:
+        - pids
+        - sockets
+
     - name: Install required dependencies with bundler.
       shell: "bundle install --path vendor/bundle chdir={{ app_directory }}"
       when: app_updated.changed == true
@@ -65,4 +76,12 @@
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         recurse: yes
+      notify: restart nginx
+
+    - name: Start Puma server.
+      shell: "{{ item }} chdir={{ app_directory }}"
+      with_items:
+        - bundle exec puma -d --bind unix://{{ app_directory }}/tmp/sockets/puma.sock --pidfile {{ app_directory }}/tmp/pids/puma.pid --state {{ app_directory }}/tmp/pids/puma.state
+      environment: "{{app_environment}}"
+   #   when: app_updated.changed == true
       notify: restart nginx

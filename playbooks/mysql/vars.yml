@@ -1,5 +1,5 @@
 ---
 mysql_databases:
-  - name: myticketee_production
+  - name: blog_production
     collation: utf8_general_ci
     encoding: utf8
