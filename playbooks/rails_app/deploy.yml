@@ -4,9 +4,10 @@
 
   vars_files:
     - vars.yml
-
-  roles:
-    - geerlingguy.nginx  # to use its handler for restarting nginx
+  
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
 
   tasks:
     - name: Ensure demo application is at correct release.
@@ -29,10 +30,6 @@
         group: "{{ app_user }}"
         mode: 0664
       notify: restart nginx
-      # Fails frequently on Ansible 2.2.0.0 because of git.py module error
-      # Just retrying fixes the problem
-      # See https://github.com/ansible/ansible-modules-core/issues/5504
-      # and https://github.com/ansible/ansible-modules-core/pull/5505
 
     - name: Ensure puma.rb configuration file is present.
       template:
@@ -53,6 +50,28 @@
       with_items:
         - pids
         - sockets
+
+    - name: Structured Logging for Rails. Update rails app Gemfile.
+      blockinfile:
+        path: "{{ app_directory }}/Gemfile"
+        block: |
+          #
+          # FOR STRUCTURED LOGGING
+          # SEE https://kartar.net/2015/12/structured-logging/
+          gem 'lograge'
+          gem 'logstash-event'
+          gem 'logstash-logger'
+        insertafter: " gem 'puma'"
+
+    - name: Structured Logging for Rails. Update rails app /config/environments/production.rb file
+      blockinfile:
+        path: "{{ app_directory }}/config/environments/production.rb"
+        block: |
+            config.log_level = :info
+            config.lograge.enabled = true
+            config.lograge.formatter = Lograge::Formatters::Logstash.new
+            config.logger = LogStashLogger.new(type: :file, path: "{{ app_directory }}/log/production.json", sync: true)
+        insertbefore: "end"
 
     - name: Install required dependencies with bundler.
       shell: "bundle install --path vendor/bundle chdir={{ app_directory }}"
@@ -83,5 +102,5 @@
       with_items:
         - bundle exec puma -d --bind unix://{{ app_directory }}/tmp/sockets/puma.sock --pidfile {{ app_directory }}/tmp/pids/puma.pid --state {{ app_directory }}/tmp/pids/puma.state
       environment: "{{app_environment}}"
-   #   when: app_updated.changed == true
+      when: app_updated.changed == true
       notify: restart nginx

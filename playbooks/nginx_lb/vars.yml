@@ -2,6 +2,7 @@
 # Variables for Nginx configuration.
 
 nginx_remove_default_vhost: false
+# The playbook /playbooks/nginx_lb/main.yml does removes it explicitly
 
 nginx_vhosts: []
 # A list of vhost definitions (server blocks) for Nginx virtual hosts.

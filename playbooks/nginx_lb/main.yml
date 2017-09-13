@@ -14,7 +14,11 @@
         dest: /etc/nginx/sites-available/default
         state: absent
 
-    - name: Ensure nginx config file is present.
+    - name: Copy nginx config file to /etc/nginx/nginx.conf. JSON format logging.
+      copy: src=files/nginx.conf dest=/etc/nginx/nginx.conf
+      notify: restart nginx
+
+    - name: Ensure nginx load balancer config file is present at /etc/nginx/conf.d/
       template:
         src: templates/demo-rails-app.conf.j2
         dest: /etc/nginx/conf.d/demo-rails-app.conf
