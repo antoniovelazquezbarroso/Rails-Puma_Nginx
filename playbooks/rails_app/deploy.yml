@@ -13,7 +13,8 @@
     - name: Ensure demo application is at correct release.
       git:
         repo: https://github.com/antoniovelazquezbarroso/myticketee_mysql.git
-        version: "{{ app_version }}" # To choose version repository to checkout
+        version: ed04365289c9fe3ff223c46a22f12dfa98bc6203
+#        version: "{{ app_version }}" # To choose version repository to checkout
                                      # (can be a branch name, tag name or SHA-1 hash)
                                      # defaults to the literal string HEAD 
         dest: "{{ app_directory }}"
@@ -22,57 +23,49 @@
       register: app_updated
       notify: restart nginx
 
-    - name: Ensure secrets file is present.
+    - name: Ensure rails secrets file is present.
       template:
         src: templates/secrets.yml.j2
         dest: "{{ app_directory }}/config/secrets.yml"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: 0664
+      when: app_updated.changed == true  
       notify: restart nginx
 
-    - name: Ensure puma.rb configuration file is present.
-      template:
-        src: templates/puma.rb.j2
-        dest: "{{ app_directory }}/config/puma.rb"
-        owner: "{{ app_user }}"
-        group: "{{ app_user }}"
-        mode: 0664
-      notify: restart nginx
-      
-    - name: Ensure puma pids and socket folders exist and are writeable.
-      file:
-        path: "{{ app_directory }}/tmp/{{ item }}"
-        state: directory
-        owner: "{{ app_user }}"
-        group: "{{ app_user }}"
-        mode: 0755
-      with_items:
-        - pids
-        - sockets
-
-    - name: Structured Logging for Rails. Update rails app Gemfile.
+    - name: Set Rails structured logging (1/2). Update rails app Gemfile.
       blockinfile:
         path: "{{ app_directory }}/Gemfile"
         block: |
           #
           # FOR STRUCTURED LOGGING
           # SEE https://kartar.net/2015/12/structured-logging/
-          gem 'lograge'
-          gem 'logstash-event'
-          gem 'logstash-logger'
-        insertafter: " gem 'puma'"
+          gem 'lograge', group: :production
+          gem 'logstash-event', group: :production
+          gem 'logstash-logger', group: :production
+          #
+        insertafter: "# gem 'capistrano-rails', group: :development"
+      when: app_updated.changed == true
 
-    - name: Structured Logging for Rails. Update rails app /config/environments/production.rb file
+    - name: Set Rails structured logging(2/2). Update rails app /config/environments/production.rb file
       blockinfile:
         path: "{{ app_directory }}/config/environments/production.rb"
         block: |
+          #
+          # FOR STRUCTURED LOGGING
+          # SEE https://kartar.net/2015/12/structured-logging/          
             config.log_level = :info
             config.lograge.enabled = true
             config.lograge.formatter = Lograge::Formatters::Logstash.new
             config.logger = LogStashLogger.new(type: :file, path: "{{ app_directory }}/log/production.json", sync: true)
+          #
         insertbefore: "end"
+      when: app_updated.changed == true
 
+    # THESE INCLUDED TASKS SET PUMA AND GOD GEMS, CONFIG AND UPSTART FILES
+    - include: set_puma_god.yml
+
+    # ANY CHANGES TO THE GEMFILE SHOULD BE DONE BEFORE THIS TASK
     - name: Install required dependencies with bundler.
       shell: "bundle install --path vendor/bundle chdir={{ app_directory }}"
       when: app_updated.changed == true
@@ -97,10 +90,8 @@
         recurse: yes
       notify: restart nginx
 
-    - name: Start Puma server.
-      shell: "{{ item }} chdir={{ app_directory }}"
-      with_items:
-        - bundle exec puma -d --bind unix://{{ app_directory }}/tmp/sockets/puma.sock --pidfile {{ app_directory }}/tmp/pids/puma.pid --state {{ app_directory }}/tmp/pids/puma.state
-      environment: "{{app_environment}}"
-      when: app_updated.changed == true
-      notify: restart nginx
+    - name: Start Puma Server by starting its monitoring by God (which in turn keeps alive Puma).
+      become: yes
+      shell: "bundle exec god -c {{ app_directory }}/config/god.rb --log {{ app_directory }}/log/god_main.log chdir={{ app_directory }}"
+
+

@@ -1,0 +1,119 @@
+---
+# THESE TASKS ARE INCLUDED IN THE deploy.yml PLAYBOOK
+# THEY SET PUMA AND GOD GEMS, CONFIG AND UPSTART FILES   
+- name: Ensure Unicorn gem absent of Gemfile
+  lineinfile:
+    path: "{{ app_directory }}/Gemfile"
+    regexp: "{{ item }}"
+    state: absent
+  with_items:
+    - '# Use Unicorn as the app server'
+    - "gem 'unicorn'"
+
+- name: Ensure Puma gem present at Gemfile
+  lineinfile:
+    path: "{{ app_directory }}/Gemfile"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    insertafter : 'gem "pundit", "~> 0.3.0'
+  with_items:
+    - {
+      regexp: "gem 'puma'",
+      line: " gem 'puma', group: :production"
+    }
+    - {
+      regexp: '# Use Puma as the app server',
+      line: "# Use Puma as the app server"
+    }
+
+- name: Ensure puma.rb configuration file is present.
+  template:
+    src: templates/config-puma.rb.j2
+    dest: "{{ app_directory }}/config/puma.rb"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: 0664
+  notify: restart nginx
+
+- name: Ensure puma pids and socket folders exist and writeable.
+  file:
+    path: "{{ app_directory }}/tmp/{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: 0755
+  with_items:
+    - pids
+    - sockets
+
+- name: Ensure God gem present at Gemfile
+  lineinfile:
+    path: "{{ app_directory }}/Gemfile"
+    regexp: "gem 'god', group: :production"
+    line: " gem 'god', group: :production"
+    state: present
+    insertafter : "gem 'puma', group: :production"
+
+- name: Ensure god.rb configuration and god upstart files are present.
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: 0664
+  with_items:
+    - {
+      src: templates/config-god.rb.j2,
+      dest: "{{ app_directory }}/config/god.rb"
+    }
+    - {
+      src: templates/init-god.conf.j2,
+      dest: /etc/init/god.conf
+    }
+
+# YOU NEED THIS FOR THE GOD UPSTART SCRIPT (NEEDS TO EXEC COMMAND AS ROOT)
+- name: Add sudo group rights for deployment user over god program call.
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: "{{ app_user }}"
+    line: "{{ app_user }} ALL=(ALL) NOPASSWD: {{ app_directory }}/vendor/bundle/ruby/2.2.0/gems/god-0.13.7/bin/god"
+    state: present
+
+# OTHER TWO WAYS TO START PUMA
+# THIS USES JUNGLE UPSTART PUMA
+#    - name: Set Puma. Install Jungle Upstart Puma.
+#      template:
+#        src: "{{ item.src }}"
+#        dest: "{{ item.dest }}"
+#        owner: "{{ app_user }}"
+#        group: "{{ app_user }}"
+#        mode: 0664
+#      with_items:
+#        - {
+#          src: templates/init-puma-manager.conf.j2,
+#          dest: /etc/init/puma-manager.conf
+#        }
+#        - {
+#          src: templates/init-puma.conf.j2,
+#          dest: /etc/init/puma.conf
+#        }
+#        - {
+#          src: templates/etc-puma.conf.j2,
+#          dest: /etc/puma.conf
+#        }
+#    - name: Start Puma server. Through Jungle Upstart
+#      become: yes
+#      shell: "start puma app={{ app_directory }}"
+#      environment: "{{app_environment}}"
+#      when: app_updated.changed == true
+#      notify: restart nginx
+
+
+#  OLDER VERSION, STARTING PUMA WITH THIS SOLE COMMAND(WITHOUT GOD AND WITHOUT JUNGLE UPSTART).
+#    - name: Start Puma server.
+#      become: yes
+#      shell: "bundle exec puma -C {{ app_directory }}/config/puma.rb chdir={{ app_directory }}"
+#      notify: restart nginx
+## OTRO INCLUSO SIN FICHERO DE CONFIGURACION DE PUMA
+##     shell:"bundle exec puma -d --bind unix://{{ app_directory }}/tmp/sockets/puma.sock --pidfile {{ app_directory }}/tmp/pids/puma.pid --state {{ app_directory }}/tmp/pids/puma.state

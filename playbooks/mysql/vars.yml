@@ -4,9 +4,12 @@ mysql_databases:
     collation: utf8_general_ci
     encoding: utf8
 
+# MySql error log
+mysql_log_error: /var/log/mysql-error.log
+
 # MySql general log
 mysql_log: "/var/log/mysql/mysql-general.log"
 
-# Slow query log settings.
+# MySql Slow query log settings.
 mysql_slow_query_log_enabled: yes
 mysql_slow_query_time: "2"
