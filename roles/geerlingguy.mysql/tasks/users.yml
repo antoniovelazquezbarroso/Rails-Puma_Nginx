@@ -9,3 +9,6 @@
     append_privs: "{{ item.append_privs | default('no') }}"
   with_items: "{{ mysql_users }}"
   no_log: true
+  ignore_errors: true
+  # DA ERRORES CUANDO HACES VAGRANT PROVISION, Y YA ESTABAN CREADOS LOS USUARIOS
+  # PORQUE (item=(censored due to no_log)) => {"censored": "the output has been hidden due to the fact that 'no_log: true' was specified for this result"}

@@ -8,6 +8,7 @@
   handlers:
     - name: restart nginx
       service: name=nginx state=restarted
+      delegate_to: 192.168.2.40
 
   tasks:
     - name: Ensure demo application is at correct release.
@@ -30,7 +31,6 @@
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: 0664
-      when: app_updated.changed == true  
       notify: restart nginx
 
     - name: Set Rails structured logging (1/2). Update rails app Gemfile.
@@ -45,7 +45,7 @@
           gem 'logstash-logger', group: :production
           #
         insertafter: "# gem 'capistrano-rails', group: :development"
-      when: app_updated.changed == true
+      notify: restart nginx
 
     - name: Set Rails structured logging(2/2). Update rails app /config/environments/production.rb file
       blockinfile:
@@ -60,7 +60,37 @@
             config.logger = LogStashLogger.new(type: :file, path: "{{ app_directory }}/log/production.json", sync: true)
           #
         insertbefore: "end"
-      when: app_updated.changed == true
+      notify: restart nginx
+
+    - name: Set Rails Database Config for TCP connection
+      lineinfile:
+        path: "{{ app_directory }}/config/database.yml"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        insertafter : '  password:'
+      with_items:
+        - {
+          regexp: "  socket:",
+          line: "#  socket: /var/run/mysqld/mysqld.sock     # Ubuntu 14.04"
+        }
+        - {
+          regexp: " port: 3306",
+          line: "  port: 3306"
+        }
+        - {
+          regexp: "  host: 192.168.2.40",
+          line: "  host: 192.168.2.40"
+        }
+        - {
+          regexp: "  password: root",
+          line: "  password: demo-rails-app"
+        }
+        - {
+          regexp: "  username: root",
+          line: "  username: demo-rails-app"
+        }
+      notify: restart nginx
 
     # THESE INCLUDED TASKS SET PUMA AND GOD GEMS, CONFIG AND UPSTART FILES
     - include: set_puma_god.yml
@@ -71,11 +101,18 @@
       when: app_updated.changed == true
       notify: restart nginx
 
-    - name: Perform deployment-related rake tasks.
+    - name: Perform deployment-related database rake tasks.
       shell: "{{ item }} chdir={{ app_directory }}"
       with_items:
         - bundle exec rake db:migrate
         - bundle exec rake db:seed
+      environment: "{{app_environment}}"
+      when: app_updated.changed == true and inventory_hostname == groups.railsapp[0]
+      notify: restart nginx
+
+    - name: Perform deployment-related assets rake tasks.
+      shell: "{{ item }} chdir={{ app_directory }}"
+      with_items:
         - bundle exec rake assets:precompile
       environment: "{{app_environment}}"
       when: app_updated.changed == true

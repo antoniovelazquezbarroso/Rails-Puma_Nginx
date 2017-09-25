@@ -14,9 +14,10 @@ Vagrant.configure("2") do |config|
 
   # Define required VMs with name and static private IP addresses.
   boxes = [
-    { :name => "nginx", :ip => "192.168.2.40" },
-#    { :name => "railsapp", :ip => "192.168.2.50" },
-#    { :name => "mysql", :ip => "192.168.2.60" }
+    { :name => "VM40", :ip => "192.168.2.40" },
+    { :name => "VM50", :ip => "192.168.2.50" },
+#    { :name => "VM60", :ip => "192.168.2.60" },
+#    { :name => "VM70", :ip => "192.168.2.70" },
   ]
 
   # Provision each of the VMs.
@@ -26,8 +27,8 @@ Vagrant.configure("2") do |config|
       config.vm.network :private_network, ip: opts[:ip]
 
       # Provision all the VMs using Ansible after last VM is up.
-      if opts[:name] == "nginx"
-#      if opts[:name] == "mysql"
+      if opts[:name] == "VM50"
+#      if opts[:name] == "VM70"
         config.vm.provision "ansible" do |ansible|
           ansible.playbook = "playbooks/configure.yml"
           ansible.inventory_path = "inventories/vagrant/inventory"

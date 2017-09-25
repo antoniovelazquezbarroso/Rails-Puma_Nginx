@@ -26,7 +26,8 @@ state_path "{{ app_directory }}/tmp/pids/puma.state"
 # you can also use the “ssl_bind” option.
 # ssl_bind '127.0.0.1', '9292', { key: path_to_key, cert: path_to_cert }
 
-bind "unix://{{ app_directory }}/tmp/sockets/puma.sock"
+#bind "unix://{{ app_directory }}/tmp/sockets/puma.sock"
+bind 'tcp://0.0.0.0:9292'
 
 # Logging
 stdout_redirect "log/puma.stdout.log", "log/puma.stderr.log", true

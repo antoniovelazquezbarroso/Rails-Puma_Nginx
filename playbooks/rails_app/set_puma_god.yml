@@ -9,6 +9,7 @@
   with_items:
     - '# Use Unicorn as the app server'
     - "gem 'unicorn'"
+  notify: restart nginx
 
 - name: Ensure Puma gem present at Gemfile
   lineinfile:
@@ -26,6 +27,7 @@
       regexp: '# Use Puma as the app server',
       line: "# Use Puma as the app server"
     }
+  notify: restart nginx
 
 - name: Ensure puma.rb configuration file is present.
   template:
@@ -46,6 +48,7 @@
   with_items:
     - pids
     - sockets
+  notify: restart nginx
 
 - name: Ensure God gem present at Gemfile
   lineinfile:
@@ -54,6 +57,7 @@
     line: " gem 'god', group: :production"
     state: present
     insertafter : "gem 'puma', group: :production"
+  notify: restart nginx
 
 - name: Ensure god.rb configuration and god upstart files are present.
   template:
@@ -71,7 +75,8 @@
       src: templates/init-god.conf.j2,
       dest: /etc/init/god.conf
     }
-
+  notify: restart nginx
+  
 # YOU NEED THIS FOR THE GOD UPSTART SCRIPT (NEEDS TO EXEC COMMAND AS ROOT)
 - name: Add sudo group rights for deployment user over god program call.
   lineinfile:

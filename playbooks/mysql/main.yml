@@ -9,9 +9,14 @@
     - name: Create dynamic MySQL variables.
       set_fact:
         mysql_users:
-          - name: mycompany_user
-            host: "{{ groups['mysql'][0] }}"
-            password: secret
-            priv: "*.*:SELECT"
+          - name: demo-rails-app
+            host: "{{ groups['railsapp'][0] }}"
+            password: demo-rails-app
+            priv: "*.*:ALL"
+          - name: demo-rails-app
+            host: "{{ groups['railsapp'][1] }}"
+            password: demo-rails-app
+            priv: "*.*:ALL"
+
   roles:
     - geerlingguy.mysql

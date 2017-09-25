@@ -1,5 +1,8 @@
 upstream demo-rails-app {
-  server unix:///opt/demo-rails-app/tmp/sockets/puma.sock;
+#  server unix:///opt/demo-rails-app/tmp/sockets/puma.sock;
+#  ip_hash;
+  server 192.168.2.40:9292;
+  server 192.168.2.50:9292;
 }
 
 server {
